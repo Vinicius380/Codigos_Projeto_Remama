@@ -2,6 +2,7 @@
 # pip install paho-mqtt flask  ==> Conexão com os sensores.
 
 from datetime import datetime, timezone
+from sqlite3.dbapi2 import Timestamp
 from flask import Flask, Response, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 import json
@@ -104,33 +105,33 @@ class Sensores(mybd.Model):
 # Seleciona todos os registros
 @app.route('/sensores', methods=['GET'])
 def selecionar_registros():
-    registros = Sensores.query.all()
-    registros_json = [registro.to_json() for registro in registros]
+    sensores = Sensores.query.all()
+    sensores_json = [sensores.to_json() for sensores in sensores]
     
-    return gera_response(200, 'sensores', registros_json)
+    return gera_response(200, 'sensores', sensores_json)
 
 
 # Seleciona um registro por Id específico
 @app.route('/sensores/<id>', methods=['GET'])
 def selecionar_registro_por_id(id):
-    registro = Sensores.query.filter_by(id=id).first()
+    sensores = Sensores.query.filter_by(id=id).first()
     
-    if registro:
-        registro_json = registro.to_json()
-        return gera_response(200, 'sensores', registro_json)
+    if sensores:
+        sensores_json = sensores.to_json()
+        return gera_response(200, 'sensores', sensores_json)
     else:
         return gera_response(400, 'sensores', {}, 'Registro não encontrado')
     
 # Deleta um registro por Id específico
 @app.route('/sensores/<id>', methods=['DELETE'])
 def deletar_registro_por_id(id):
-    registro = Sensores.query.filter_by(id=id).first()
+    sensores = Sensores.query.filter_by(id=id).first()
     
-    if registro:
+    if sensores:
         try:
-            mybd.session.delete(registro)
+            mybd.session.delete(sensores)
             mybd.session.commit()
-            return gera_response(200, 'sensores', registro.to_json(), 'Registro deletado!')
+            return gera_response(200, 'sensores', sensores.to_json(), 'Registro deletado!')
         except Exception as error:
             print(f'Erro: {error}')
             mybd.session.rollback()
@@ -175,7 +176,7 @@ def criar_dados():
 
     
         try:
-            tempo_oficial = datetime.fromtimestamp(int(timestamp_unix), tz=timezone.utc)
+            tempo_oficial = datetime.fromtimestamp(int(Timestamp), tz=timezone.utc)
         except Exception as e:
             print('Erro', e)
             return jsonify({'error': 'Timestamp inválido'}), 400 

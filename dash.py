@@ -5,6 +5,7 @@ import plotly.express as px
 from query import *
 from datetime import datetime
 from streamlit_modal import Modal
+from query import *
 
 query = "SELECT * FROM tb_dados"    # Consulta com o banco de dados.
 df = conexao(query)                 # Carregar os dados do MySQL.
