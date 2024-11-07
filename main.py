@@ -2,6 +2,7 @@
 # pip install paho-mqtt flask  ==> Conexão com os sensores.
 
 from datetime import datetime, timezone
+from sqlite3.dbapi2 import Timestamp
 from flask import Flask, Response, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 import json
@@ -23,13 +24,14 @@ mqtt_dados = {}
 def conexao_sensor(client, userdata, flags, rc):
     client.subscribe("sensores/dados")
 
+
 def msg_sensor(client, userdata, msg):
     global mqtt_dados
     
     valor = msg.payload.decode('utf-8')     # Decodificar a mensagem recebida de bytes para string
     mqtt_dados = json.loads(valor)          # Decodificar de string para JSON
     print(f'Mensagem recebida: {mqtt_dados}')
-    
+
     with app.app_context():         # Correlação Banco de Dados com Sensor. 
         try:
             id_paciente = mqtt_dados.get('id_paciente')
@@ -91,46 +93,46 @@ class Sensores(mybd.Model):
 
     def to_json(self):
         return {
-            'id': self.id,
-            'id_paciente': self.id_paciente,
+            'id': float(self.id),
+            'id_paciente': str(self.id_paciente),
             'tempo_registro': self.tempo_registro.isoformat(),
-            'oximetro_saturacao_oxigenio': self.oximetro_saturacao_oxigenio,
-            'oximetro_frequencia_pulso': self.oximetro_frequencia_pulso,
-            'frequencia_cardiaca': self.frequencia_cardiaca,
-            'temperatura': self.temperatura,
-            'indice_uv': self.indice_uv
+            'oximetro_saturacao_oxigenio': int(self.oximetro_saturacao_oxigenio),
+            'oximetro_frequencia_pulso': int(self.oximetro_frequencia_pulso),
+            'frequencia_cardiaca': int(self.frequencia_cardiaca),
+            'temperatura': float(self.temperatura),
+            'indice_uv': int(self.indice_uv)
         }
 
 # Seleciona todos os registros
 @app.route('/sensores', methods=['GET'])
 def selecionar_registros():
-    registros = Sensores.query.all()
-    registros_json = [registro.to_json() for registro in registros]
+    sensores = Sensores.query.all()
+    sensores_json = [sensores.to_json() for sensores in sensores]
     
-    return gera_response(200, 'sensores', registros_json)
+    return gera_response(200, 'sensores', sensores_json)
 
 
 # Seleciona um registro por Id específico
 @app.route('/sensores/<id>', methods=['GET'])
 def selecionar_registro_por_id(id):
-    registro = Sensores.query.filter_by(id=id).first()
+    sensores = Sensores.query.filter_by(id=id).first()
     
-    if registro:
-        registro_json = registro.to_json()
-        return gera_response(200, 'sensores', registro_json)
+    if sensores:
+        sensores_json = sensores.to_json()
+        return gera_response(200, 'sensores', sensores_json)
     else:
         return gera_response(400, 'sensores', {}, 'Registro não encontrado')
     
 # Deleta um registro por Id específico
 @app.route('/sensores/<id>', methods=['DELETE'])
 def deletar_registro_por_id(id):
-    registro = Sensores.query.filter_by(id=id).first()
+    sensores = Sensores.query.filter_by(id=id).first()
     
-    if registro:
+    if sensores:
         try:
-            mybd.session.delete(registro)
+            mybd.session.delete(sensores)
             mybd.session.commit()
-            return gera_response(200, 'sensores', registro.to_json(), 'Registro deletado!')
+            return gera_response(200, 'sensores', sensores.to_json(), 'Registro deletado!')
         except Exception as error:
             print(f'Erro: {error}')
             mybd.session.rollback()
@@ -144,17 +146,17 @@ def busca_dados():
     return jsonify(mqtt_dados)        
 
 
-def to_json(self):
-    return {
-            'id': self.id,
-            'id_paciente': self.id_paciente,
-            'tempo_registro': self.tempo_registro.isoformat(),
-            'oximetro_saturacao_oxigenio': self.oximetro_saturacao_oxigenio,
-            'oximetro_frequencia_pulso': self.oximetro_frequencia_pulso,
-            'frequencia_cardiaca': self.frequencia_cardiaca,
-            'temperatura': self.temperatura,
-            'indice_uv': self.indice_uv
-        }
+# def to_json(self):
+#     return {
+#             'id': self.id,
+#             'id_paciente': self.id_paciente,
+#             'tempo_registro': self.tempo_registro.isoformat(),
+#             'oximetro_saturacao_oxigenio': self.oximetro_saturacao_oxigenio,
+#             'oximetro_frequencia_pulso': self.oximetro_frequencia_pulso,
+#             'frequencia_cardiaca': self.frequencia_cardiaca,
+#             'temperatura': self.temperatura,
+#             'indice_uv': self.indice_uv
+#         }
     
 @app.route('/dados', methods=['POST'])
 def criar_dados():
@@ -165,24 +167,28 @@ def criar_dados():
             return jsonify({'error': 'Nenhum dado foi fornecido'}), 400   
         
         print(f'Dados Recebidos": {dados}')
-        id_paciente = dados.get('id_paciente')  
+        id_paciente = dados.get('id_paciente')
         oximetro_saturacao_oxigenio = dados.get('oximetro_saturacao_oxigenio')
         oximetro_frequencia_pulso = dados.get('oximetro_frequencia_pulso')
         frequencia_cardiaca = dados.get('frequencia_cardiaca')
         temperatura = dados.get('temperatura')
         indice_uv = dados.get('indice_uv')
         tempo_registro = dados.get('tempo_registro')
-
     
         try:
-            tempo_oficial = datetime.fromtimestamp(int(timestamp_unix), tz=timezone.utc)
+            tempo_oficial = datetime.fromtimestamp(int(Timestamp), tz=timezone.utc)
         except Exception as e:
             print('Erro', e)
             return jsonify({'error': 'Timestamp inválido'}), 400 
         
         novo_registro = Sensores(
-           id_paciente=id_paciente,
-           oximetro_saturacao_oxigenio=oximetro_saturacao_oxigenio,
+            id_paciente=id_paciente,
+            oximetro_saturacao_oxigenio=oximetro_saturacao_oxigenio,
+            oximetro_frequencia_pulso=oximetro_frequencia_pulso,
+            frequencia_cardiaca=frequencia_cardiaca,
+            temperatura=temperatura,
+            indice_uv=indice_uv,
+            tempo_registro=tempo_oficial
         )
         
         mybd.session.add(novo_registro)

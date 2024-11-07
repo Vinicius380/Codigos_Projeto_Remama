@@ -41,13 +41,12 @@ function sendPayload() {
     var IoT_Payload = {
         id_paciente: '123456',
         timestamp: Date.now(),
-        dados_sensores: {
-            oximetro_saturacao_oxigenio: oximetroSaturacao,
-            oximetro_frequencia_pulso: oximetroFrequencia,
-            frequencia_cardiaca: frequenciaCardiaca,
-            temperatura: temperatura,
-            indice_uv: indiceUV,
-        },
+        oximetro_saturacao_oxigenio: oximetroSaturacao,
+        oximetro_frequencia_pulso: oximetroFrequencia,
+        frequencia_cardiaca: frequenciaCardiaca,
+        temperatura: temperatura,
+         indice_uv: indiceUV,
+        }
     };
 
     // Converte o objeto IoT_Payload em uma string no formato JSON
@@ -59,7 +58,7 @@ function sendPayload() {
     // Exibe no console o tópico e o payload que foram enviados
     out("Tópico: " + topic);
     out("Payload enviado: " + payload);
-}
+
 
 // Função auxiliar para exibir mensagens no console
 function out(message) {
