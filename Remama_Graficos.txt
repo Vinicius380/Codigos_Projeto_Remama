@@ -19,18 +19,12 @@ Para: Comparação entre todos os parâmetros para um único treino.
 Insight: Esse gráfico visualiza múltiplas variáveis em uma única exibição, útil para entender o comportamento geral das variáveis em uma única sessão e comparar sessões de treino.
 
 
-Densidade de Kernel:
-
-Para: Frequência cardíaca e temperatura.
-
-Insight: Visualiza a densidade dos dados, ajudando a identificar a faixa mais comum para cada variável. Esse gráfico é ótimo para visualizar padrões de distribuição que o histograma pode não captar.
-
-
 Velocímetro:
 
 Para: Temperatura e frequência cardíaca.
 
 Insight: Indicador em forma de velocímetro que mostra em tempo real quando um valor se aproxima de um limite seguro ou crítico, funcionando como um alerta visual.
+
 
 Cascata:
 

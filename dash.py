@@ -142,7 +142,7 @@ def Home():
 
 # Geração de Gráficos
 def graficos():
-    st.title('Dashboard Monitoramento')
+    st.title('Dashboard de Monitoramento')
 
     grafico1, grafico2, grafico3 = st.tabs(
         [
@@ -245,19 +245,19 @@ def graficos():
             peso_oximetro_pulso = calcular_peso(oximetro_frequencia_valor, "oximetro_frequencia")
             peso_frequencia_cardiaca = calcular_peso(frequencia_cardiaca_valor, "frequencia_cardiaca")
             
-            grupo_dados = pd.DataFrame({
+            grupo_dados3 = pd.DataFrame({
             'Métrica': ['Saturação do Oxigenio', 'Oximetro Pulso', 'Frequência Cardíaca'],
             'Valor': [peso_oximetro_saturacao, peso_oximetro_pulso, peso_frequencia_cardiaca]})
                     
-            grupo_dados = pd.DataFrame(dict(
+            grupo_dados3 = pd.DataFrame(dict(
             Métrica = ['Saturação do Oxigenio', 'Oximetro Pulso', 'Frequência Cardíaca'],
             Valor = [peso_oximetro_saturacao, peso_oximetro_pulso, peso_frequencia_cardiaca]))
 
             # Gráfico de radar
             fig_valores3 = px.line_polar(
-                grupo_dados,
-                r = grupo_dados["Valor"],  
-                theta = grupo_dados["Métrica"], 
+                grupo_dados3,
+                r = grupo_dados3["Valor"],  
+                theta = grupo_dados3["Métrica"], 
                 line_close=True,
                 title="Gráfico de Radar para Dados de Saúde"
             )
@@ -269,6 +269,10 @@ def graficos():
             st.error(f"Erro ao criar gráfico de radar: {e}")
             
         st.plotly_chart(fig_valores3, use_container_width=True)
+
+        
+        
+        
         
 Home()
 graficos()
