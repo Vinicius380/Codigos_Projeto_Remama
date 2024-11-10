@@ -1,6 +1,3 @@
-# Instalar:
-# pip install paho-mqtt flask  ==> Conexão com os sensores.
-
 from datetime import datetime, timezone
 from sqlite3.dbapi2 import Timestamp
 from flask import Flask, Response, jsonify, request
@@ -14,7 +11,7 @@ app = Flask("sensores")     # Nome do aplicativo.
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False    # Configura o SQLAlchemy para rastrear modificações. 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:senai%40134@127.0.0.1/bd_sensores'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:525748@127.0.0.1/bd_sensores'
 
 mybd = SQLAlchemy(app)      # Cria uma instância do SQLAlchemy, passando a aplicação Flask como parâmetro. 
 
@@ -145,18 +142,6 @@ def deletar_registro_por_id(id):
 def busca_dados():
     return jsonify(mqtt_dados)        
 
-
-# def to_json(self):
-#     return {
-#             'id': self.id,
-#             'id_paciente': self.id_paciente,
-#             'tempo_registro': self.tempo_registro.isoformat(),
-#             'oximetro_saturacao_oxigenio': self.oximetro_saturacao_oxigenio,
-#             'oximetro_frequencia_pulso': self.oximetro_frequencia_pulso,
-#             'frequencia_cardiaca': self.frequencia_cardiaca,
-#             'temperatura': self.temperatura,
-#             'indice_uv': self.indice_uv
-#         }
     
 @app.route('/dados', methods=['POST'])
 def criar_dados():

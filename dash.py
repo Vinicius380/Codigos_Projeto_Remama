@@ -5,15 +5,18 @@ import plotly.express as px
 from query import *
 from datetime import datetime
 from streamlit_modal import Modal
-from query import *
+
+st.set_page_config(
+    page_title="Remama",  # título da página
+    page_icon=":dragon:",  # ícone da página (opcional)
+    layout="centered",  # ou "wide", se preferir layout mais amplo
+    initial_sidebar_state="collapsed"
+)
 
 query = "SELECT * FROM tb_dados"    # Consulta com o banco de dados.
 df = conexao(query)                 # Carregar os dados do MySQL.
 
 df['tempo_registro'] = pd.to_datetime(df['tempo_registro'])  # Converter para datetime
-
-if st.button("Atualizar dados"):     # Botão para atualização dos dados.
-    df = conexao(query)
 
 # MENU LATERAL
 st.sidebar.header('Selecione a informação para gerar o gráfico')
@@ -141,30 +144,71 @@ def Home():
 def graficos():
     st.title('Dashboard Monitoramento')
 
-    if df_selecionado.empty:
-        st.write('Nenhum dado disponível para gerar o gráfico.')
-        return
+    grafico1, grafico2, grafico3, grafico4 = st.tabs(
+        [
+            'Gráfico de Barras',
+            'Gráfico Linear',
+            'Gráfico X',
+            'Gráfico Y'
+        ]
+    )
 
-    if colunaX == colunaY:
-        st.warning('Selecione colunas diferentes para os eixos X e Y')
-        return
+    with grafico1:
+        if df_selecionado.empty:
+            st.write('Nenhum dado disponível para gerar o gráfico.')
+            return
 
-    try:
-        grupo_dados = df_selecionado.groupby(by=[colunaX]).size().reset_index(name='Contagem')
+        if colunaX == colunaY:
+            st.warning('Selecione colunas diferentes para os eixos X e Y')
+            return
 
-        fig_valores = px.bar(
+        try:
+            grupo_dados = df_selecionado.groupby(by=[colunaX]).size().reset_index(name='Contagem')
+
+            fig_valores = px.bar(
+                grupo_dados,
+                x=colunaX,
+                y='Contagem',
+                orientation='h',
+                title=f'Contagem de Registros por {colunaX.capitalize()}',
+                color_discrete_sequence=['#0083b8'],
+                template='plotly_white'
+            )
+            st.plotly_chart(fig_valores, use_container_width=True)
+
+        except Exception as e:
+            st.error(f'Erro ao criar o gráfico: {e}')
+
+    with grafico2:
+
+        if df_selecionado.empty:
+            st.write('Nenhum dado disponível para gerar o gráfico.')
+            return
+
+        if colunaX == colunaY:
+            st.warning('Selecione colunas diferentes para os eixos X e Y')
+            return
+
+        try:
+            grupo_dados = df_selecionado.groupby(by=[colunaX])[colunaY].mean().reset_index(name=colunaY)
+            fig_valores2 = px.line(
             grupo_dados,
             x=colunaX,
-            y='Contagem',
-            orientation='h',
-            title=f'Contagem de Registros por {colunaX.capitalize()}',
-            color_discrete_sequence=['#0083b8'],
-            template='plotly_white'
-        )
-        st.plotly_chart(fig_valores, use_container_width=True)
+            y=colunaY,
+            line_shape='linear',  # Tipo de linha
+            title=f"Gráfico de Linhas:{colunaX.capitalize()} vs {colunaY.capitalize()}",
+            markers=True  # Para mostrar marcadores nos pontos
+            )
 
-    except Exception as e:
-        st.error(f'Erro ao criar o gráfico: {e}')
+        except Exception as e:
+            st.error(f"Erro ao criar gráfico de linhas: {e}")
+        
+        st.plotly_chart(fig_valores2, use_container_width=True)
+
 
 # Exibir as funções
 Home()
+graficos()
+
+if st.button("Atualizar dados"):     # Botão para atualização dos dados.
+    df = conexao(query)
