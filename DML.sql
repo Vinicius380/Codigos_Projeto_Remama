@@ -1,5 +1,7 @@
 SELECT * FROM tb_dados;
 
+USE bd_sensores;
+
 INSERT INTO tb_dados (id_paciente, tempo_registro, oximetro_saturacao_oxigenio, oximetro_frequencia_pulso, frequencia_cardiaca, temperatura, indice_uv)
 VALUES
 ('P001', '2024-11-01 08:00:00', 98, 75, 72, 36.5, 3),
@@ -57,3 +59,13 @@ VALUES
 ('P001', '2024-11-01 16:40:00', 99, 127, 123, 40.8, 27),
 ('P001', '2024-11-01 16:50:00', 97, 128, 124, 40.9, 28),
 ('P001', '2024-11-01 17:00:00', 96, 129, 125, 41.0, 29);
+
+SELECT AVG (oximetro_saturacao_oxigenio) FROM tb_dados;
+SELECT AVG (oximetro_frequencia_pulso) FROM tb_dados;
+SELECT AVG (frequencia_cardiaca) FROM tb_dados;
+
+SELECT 
+    AVG(oximetro_saturacao_oxigenio) AS media_oximetro_saturacao_oxigenio, 
+    AVG(oximetro_frequencia_pulso) AS media_oximetro_frequencia_pulso, 
+    AVG(frequencia_cardiaca) AS media_frequencia_cardiaca
+FROM tb_dados;
