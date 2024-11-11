@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 
-st.sidebar.image("banner-remama-01-440x153.png", use_container_width=True)
+st.sidebar.image("remama-logo.png", use_container_width=True)
 
 
 query = "SELECT * FROM tb_dados"    # Consulta com o banco de dados.
@@ -150,16 +150,16 @@ def Home():
 #Home()
 
 
-col1, col2 = st.columns([2,1])
-
+col1, col2, col3 = st.columns([3, 0.05, 1])
 
 with col1:
-    st.subheader('Dashboard de Monitoramento')
+    st.markdown("<h3 style='font-size:60px;'>Dashboard de Monitoramento</h3>", unsafe_allow_html=True)
     
     # Gráfico de Barras
     with st.container():
         grupo_dados = df.groupby(by=[colunaX]).size().reset_index(name='Contagem')
         fig_bar = px.bar(grupo_dados, x=colunaX, y='Contagem', title=f'Contagem de Registros por {colunaX.capitalize()}')
+        fig_bar.update_layout(height=400, width=700)  # Ajustando tamanho
         st.plotly_chart(fig_bar, use_container_width=True)
         
 
@@ -167,21 +167,97 @@ with col1:
     with st.container():
         grupo_dados2 = df.groupby(by=[colunaX])[colunaY].mean().reset_index(name=colunaY)
         fig_line = px.line(grupo_dados2, x=colunaX, y=colunaY, title=f"{colunaX.capitalize()} vs {colunaY.capitalize()}")
+        fig_line.update_layout(height=400, width=700)  # Ajustando tamanho
         st.plotly_chart(fig_line, use_container_width=True)
+    
+    with st.container():
+
+        try:
+            grupo_dados_X = df_selecionado.groupby(by=[colunaX]).size().reset_index(name='Contagem')
+            grupo_dados_Y = df_selecionado.groupby(by=[colunaY]).size().reset_index(name='Contagem')
+
+            fig_valores = go.Figure()
+
+            fig_valores.add_trace(go.Scatter(
+                x=grupo_dados_X[colunaX],       # Se pa o X é .count quantidade
+                y=grupo_dados_X['Contagem'],       # Y fica com .size, ou seja tamanho
+                fill='tozeroy',
+                mode='none',
+                name=f"Área de {colunaX.capitalize()}"
+            ))
+
+            # Adicionando a segunda trace (dados do eixo Y)
+            fig_valores.add_trace(go.Scatter(
+                x=grupo_dados_Y[colunaY],
+                y=grupo_dados_Y['Contagem'],
+                fill='tonexty',
+                mode='none',
+                name=f"Área de {colunaY.capitalize()}"
+            ))
+
+            # Estética
+            fig_valores.update_layout(
+                title=f'Gráfico de Área: {colunaX.capitalize()} vs {colunaY.capitalize()}',
+                xaxis_title=colunaX.capitalize(),
+                yaxis_title='Contagem',
+                template='plotly_white',
+                height=400,
+                width=700  # Ajuste do tamanho
+            )
+
+            st.plotly_chart(fig_valores, use_container_width=True, key="grafico_area")
+
+        except Exception as e:
+            st.error(f"Erro ao criar gráfico de linhas: {e}")    
         
+# Espaçamento entre colunas
 with col2:
-    st.subheader("Tempo real")
+    st.markdown("<div style='padding: 0 10px;'></div>", unsafe_allow_html=True)
+        
+        
+with col3:
+    
+    oximetro_saturacao_oxigenio = conexao("SELECT AVG (oximetro_saturacao_oxigenio) FROM tb_dados")
+    oximetro_frequencia_pulso = conexao("SELECT AVG (oximetro_frequencia_pulso) FROM tb_dados")
+    frequencia_cardiaca = conexao("SELECT AVG (frequencia_cardiaca) FROM tb_dados")
+                    
+    oximetro_saturacao_valor = oximetro_saturacao_oxigenio.iloc[0, 0] if not oximetro_saturacao_oxigenio.empty else 0
+    oximetro_frequencia_valor = oximetro_frequencia_pulso.iloc[0, 0] if not oximetro_frequencia_pulso.empty else 0
+    frequencia_cardiaca_valor = frequencia_cardiaca.iloc[0, 0] if not frequencia_cardiaca.empty else 0
+    
+
+    st.write("<div style='margin-top: 150px;'></div>", unsafe_allow_html=True)
+           
+        
+    # Gráfico de Medidor para Frequência Cardíaca
+    with st.container():
+
+    # Velocímetro
+     fig_velocimetro = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value= frequencia_cardiaca_valor,  # Pode substituir pelo valor que deseja monitorar
+        title={'text': "Frequência Cardíaca"},
+        gauge={
+            'axis': {'range': [0, 200]},  # Intervalo do velocímetro
+            'bar': {'color': "#0083b8"},
+            'steps': [
+                {'range': [0, 100], 'color': "lightgray"},
+                {'range': [100, 140], 'color': "gray"},
+                {'range': [140, 200], 'color': "darkgray"}
+            ],
+            'threshold': {
+                'line': {'color': "red", 'width': 4},
+                'thickness': 0.75,
+                'value': 160  # Limite para alerta
+            }
+        }
+    ))
+
+    fig_velocimetro.update_layout(width=300, height=300)
+    st.plotly_chart(fig_velocimetro, use_container_width=True)
     
     with st.container(): 
-        
-        oximetro_saturacao_oxigenio = conexao("SELECT AVG (oximetro_saturacao_oxigenio) FROM tb_dados")
-        oximetro_frequencia_pulso = conexao("SELECT AVG (oximetro_frequencia_pulso) FROM tb_dados")
-        frequencia_cardiaca = conexao("SELECT AVG (frequencia_cardiaca) FROM tb_dados")
-                    
-        oximetro_saturacao_valor = oximetro_saturacao_oxigenio.iloc[0, 0] if not oximetro_saturacao_oxigenio.empty else 0
-        oximetro_frequencia_valor = oximetro_frequencia_pulso.iloc[0, 0] if not oximetro_frequencia_pulso.empty else 0
-        frequencia_cardiaca_valor = frequencia_cardiaca.iloc[0, 0] if not frequencia_cardiaca.empty else 0
-                    
+                
         def calcular_peso(valor, tipo):
                         if tipo == "Saturação do Oxigenio":
                             if valor >= 95:
@@ -206,6 +282,7 @@ with col2:
                                 return 2
                             else:
                                 return 1
+        
                             
         peso_oximetro_saturacao = calcular_peso(oximetro_saturacao_valor, "Saturação do Oxigenio")
         peso_oximetro_pulso = calcular_peso(oximetro_frequencia_valor, "oximetro_frequencia")
@@ -225,14 +302,14 @@ with col2:
                         r = grupo_dados3["Valor"],  
                         theta = grupo_dados3["Métrica"], 
                         line_close=True,
-                        title="Avaliação dos Parâmetros de Saúde"
+                        title="Indicadores de Saúde em Escala de 1 a 5"
                     )
                     
         fig_valores3.update_traces(fill = "toself", line_color = "#0083b8")
                     
         fig_valores3.update_layout(
-                        width=350,
-                        height=350,
+                        width=400,
+                        height=400,
                         polar=dict(
                         angularaxis=dict(tickfont=dict(size=12)),
                         radialaxis=dict(tickfont=dict(size=14, color='black'))))
@@ -240,35 +317,5 @@ with col2:
                     
         st.plotly_chart(fig_valores3, use_container_width=True)
         
-    st.subheader("Frequência Cardíaca")
-    
-    # Gráfico de Medidor para Frequência Cardíaca
-    with st.container():
-    
-    # Adiciona o velocímetro abaixo do gráfico de radar
-     fig_velocimetro = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=frequencia_cardiaca_valor,  # Pode substituir pelo valor que deseja monitorar
-        title={'text': "Frequência Cardíaca"},
-        gauge={
-            'axis': {'range': [0, 200]},  # Intervalo do velocímetro
-            'bar': {'color': "#0083b8"},
-            'steps': [
-                {'range': [0, 100], 'color': "lightgray"},
-                {'range': [100, 140], 'color': "gray"},
-                {'range': [140, 200], 'color': "darkgray"}
-            ],
-            'threshold': {
-                'line': {'color': "red", 'width': 4},
-                'thickness': 0.75,
-                'value': 160  # Limite para alerta
-            }
-        }
-    ))
-
-    fig_velocimetro.update_layout(width=350, height=350)  # Tamanho menor do velocímetro
-    st.plotly_chart(fig_velocimetro, use_container_width=True)
-        
-    
 if st.button("Atualizar dados"):
     df = conexao(query)

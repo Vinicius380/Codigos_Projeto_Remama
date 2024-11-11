@@ -421,7 +421,7 @@ def graficos():
             
     if st.button("Atualizar dados"):     # Botão para atualização dos dados.
         df = conexao(query)
-        
+    
 # Exibir as funções
 if tela == 'Menu Principal':
     Home()
