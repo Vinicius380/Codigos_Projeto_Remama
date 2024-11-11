@@ -14,9 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-
-st.sidebar.image("remama-logo.png", use_container_width=True)
-
+st.sidebar.image("remama-logo.png")
 
 query = "SELECT * FROM tb_dados"    # Consulta com o banco de dados.
 df = conexao(query)                 # Carregar os dados do MySQL.
@@ -25,6 +23,7 @@ df['tempo_registro'] = pd.to_datetime(df['tempo_registro'])  # Converter para da
 
 # MENU LATERAL
 st.sidebar.header('Selecione a informação para gerar o gráfico')
+tela = st.sidebar.selectbox('Tela', ['Menu Principal', 'Dados por Cadastro'])
 
 # Seleção de colunas X
 colunaX = st.sidebar.selectbox(
@@ -87,6 +86,35 @@ if filtros('temperatura'):
         step=0.1
     )
 
+# Tempo Registro
+if filtros("tempo_registro"):
+     # Extrair as datas mínimas e máximas em formato de datetime
+    min_data = df["tempo_registro"].min()
+    max_data = df["tempo_registro"].max()
+
+    # Exibir dois campos de data para seleção de intervalo no sidebar
+    data_inicio = st.sidebar.date_input(
+            "Data de Início", 
+            min_data.date(), 
+            min_value=min_data.date(), 
+            max_value=max_data.date(),
+            format= "DD-MM-YYYY"
+        )
+        
+    data_fim = st.sidebar.date_input(
+            "Data de Fim", 
+            max_data.date(), 
+            min_value=min_data.date(), 
+            max_value=max_data.date(),
+            format= "DD-MM-YYYY"
+        )
+
+    # Converter as datas selecionadas para datetime, incluindo hora
+    tempo_registro_range = (
+            pd.to_datetime(data_inicio),
+            pd.to_datetime(data_fim) + pd.DateOffset(days=1) - pd.Timedelta(seconds=1)
+        )
+
 # Cria uma cópia do df original
 df_selecionado = df.copy()
 
@@ -147,8 +175,87 @@ def Home():
         st.markdown('''-----------''')
 
 
-#Home()
+def dadosUsuario():
 
+    st.sidebar.header('Selecione a informação que deseja ver')
+
+    # Seleção de colunas X
+    filtragem = st.sidebar.selectbox(
+        'Eixo X',
+        options=['Oxímetro de Oxigênio', 'Frequência do Pulso', 'Frequencia Cardíaca', 'Temperatura'],
+        index=0
+    )
+    
+    colunas_map = {
+        'Oxímetro de Oxigênio': 'oximetro_saturacao_oxigenio',
+        'Frequência do Pulso': 'oximetro_frequencia_pulso',
+        'Frequencia Cardíaca': 'frequencia_cardiaca',
+        'Temperatura': 'temperatura'
+    }
+
+    coluna_selecionada = colunas_map[filtragem]
+
+    # Calcular a média e o histórico para a coluna selecionada
+    df_media = df.groupby('id_paciente')[coluna_selecionada].mean().reset_index()
+    df_media.columns = ['id', 'media']  # Renomeando as colunas para 'id' e 'media'
+
+    df_historico = df.groupby('id_paciente')[coluna_selecionada].apply(list).reset_index()
+    df_historico.columns = ['id', 'historico']  # Renomeando as colunas para 'id' e 'historico'
+
+    # Juntando a média e o histórico em um único DataFrame
+    df_usuario = pd.merge(df_media, df_historico, on='id')
+
+    # Estabelecendo limites para moderação visual
+    if filtragem == 'Oxímetro de Oxigênio':
+        limite_baixo = 90
+        limite_alto = 100
+        
+    elif filtragem == 'Frequencia Cardíaca':
+        limite_baixo = 60
+        limite_alto = 100
+
+    elif filtragem == 'Frequência do Pulso':
+        limite_baixo = 60 
+        limite_alto = 100
+
+    elif filtragem == 'Temperatura':
+        limite_baixo = 36.5
+        limite_alto = 37.5
+
+    # Função para definir o nível
+    def definir_nivel(media, limite_baixo, limite_alto):
+        if media < limite_baixo: return "alerta", "#8093F1"
+        elif limite_baixo <= media <= limite_alto: return "ok", "#F7AEF8"
+        else: return "média", "#B388EB"
+
+    # Aplicando a função de nível à média
+    df_usuario['nivel'], _ = zip(*df_usuario['media'].apply(lambda media: definir_nivel(media, limite_baixo, limite_alto)))
+
+
+    # Função de estilização para aplicar cores à coluna 'nivel'
+    def aplicar_cores(val):
+        color = {
+            "ok": "#F7AEF8",
+            "média": "#B388EB",
+            "alerta": "#8093F1"
+        }
+        return f'background-color: {color.get(val, "#FFFFFF")}'
+
+    df_usuario = df_usuario.style.applymap(aplicar_cores, subset=['nivel'])
+
+    # Exibindo os dados no Streamlit com gráfico de histórico
+    st.dataframe(
+        df_usuario,
+        column_config={
+            "id": "ID da Paciente",
+            "media": f"Média de {filtragem}",
+            "historico": st.column_config.LineChartColumn(f"Histórico de {filtragem}"),
+            "nivel": "Nível"
+        },
+        hide_index=True,
+    )
+
+#Home()
 
 col1, col2, col3 = st.columns([3, 0.05, 1])
 
