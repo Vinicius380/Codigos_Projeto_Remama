@@ -6,7 +6,7 @@ def conexao(query):
         host ='127.0.0.1',
         port='3306',
         user='root',
-        password='senai@134',
+        password='525748', #senai%40134
         db='bd_sensores'
               
     )
