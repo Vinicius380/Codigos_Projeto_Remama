@@ -392,9 +392,13 @@ def main():
                         
             st.plotly_chart(fig_valores3, use_container_width=True)
         
+
+
+
+
+
 if st.button("Atualizar dados"):
     df = conexao(query)
-
 
 # Exibir as funções
 if tela == 'Menu Principal':

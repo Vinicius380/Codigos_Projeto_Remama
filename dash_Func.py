@@ -11,7 +11,7 @@ st.set_page_config(
     page_title="Remama",  # título da página
     page_icon=":dragon:",  # ícone da página (opcional)
     layout="wide",  # ou "wide", se preferir layout mais amplo
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="collapsed"
 )
 
 st.sidebar.image("remama-logo.png")
@@ -21,27 +21,30 @@ df = conexao(query)                 # Carregar os dados do MySQL.
 
 df['tempo_registro'] = pd.to_datetime(df['tempo_registro'])  # Converter para datetime
 
+# MENU LATERAL
+st.sidebar.header('Selecione a informação para gerar o gráfico')
+tela = st.sidebar.selectbox('Tela', ['Menu Principal', 'Dados por Cadastro'], key='tela_selectbox')
 
 # Cria uma cópia do df original
 df_selecionado = df.copy()
 
-def main():
-    # MENU LATERAL
-    st.sidebar.header('Selecione a informação para gerar o gráfico')
-    tela = st.sidebar.selectbox('Tela', ['Menu Principal', 'Dados por Cadastro'])
 
+
+def main():
     # Seleção de colunas X
     colunaX = st.sidebar.selectbox(
         'Eixo X',
         options=['tempo_registro', 'oximetro_saturacao_oxigenio', 'oximetro_frequencia_pulso', 'frequencia_cardiaca', 'temperatura'],
-        index=0
+        index=0,
+        key='colunaX'
     )
 
     # Seleção de colunas Y
     colunaY = st.sidebar.selectbox(
         'Eixo Y',
         options=['tempo_registro', 'oximetro_saturacao_oxigenio', 'oximetro_frequencia_pulso', 'frequencia_cardiaca', 'temperatura'],
-        index=1
+        index=1,
+        key='colunaY'
     )
 
     # Verificar se a coluna selecionada está nos eixos X ou Y
@@ -371,10 +374,6 @@ def dadosUsuario():
 #----------------------------------------------------------------------------------------------
 
 def main():
-    # MENU LATERAL
-    st.sidebar.header('Selecione a informação para gerar o gráfico')
-    tela = st.sidebar.selectbox('Tela', ['Menu Principal', 'Dados por Cadastro'])
-
     # Seleção de colunas X
     colunaX = st.sidebar.selectbox(
         'Eixo X',
