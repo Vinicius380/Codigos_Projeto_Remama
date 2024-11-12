@@ -127,6 +127,14 @@ def main():
         
     def graficos_main():
         
+        if colunaX == colunaY:
+            st.warning('Selecione colunas diferentes para os eixos X e Y')
+            return
+        if df_selecionado.empty:
+            st.write('Nenhum dado disponível para gerar o gráfico.')
+            return
+        
+        
         #Criação de colunas para organizar a tela principal
         col1, col2, col3 = st.columns([3, 0.05, 1])
         
@@ -293,6 +301,9 @@ def main():
 
                             
                 st.plotly_chart(fig_valores3, use_container_width=True)
+
+    #Plotar os gráficos
+    graficos_main()
 
 #----------------------------------------------------------------------------------------------
 
